@@ -7,10 +7,12 @@ const Default_grade = {
 // UI Elements
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
-const includeSpecialCheck = document.getElementById('includeSpecial');
+const takeTeachingCheck = document.getElementById('takeTeaching');
+const takeMuseumCheck = document.getElementById('takeMuseum');
 const excludeFailedCheck = document.getElementById('excludeFailed');
 const enrollmentYearSelect = document.getElementById('enrollmentYear');
 const departmentSelect = document.getElementById('department');
+const courseSelect = document.getElementById('courseSelect');
 const resultsSection = document.getElementById('resultsSection');
 const requirementsSection = document.getElementById('requirementsSection');
 
@@ -41,10 +43,12 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // 再計算トリガー
-includeSpecialCheck.addEventListener('change', reCalculate);
+takeTeachingCheck.addEventListener('change', reCalculate);
+takeMuseumCheck.addEventListener('change', reCalculate);
 excludeFailedCheck.addEventListener('change', reCalculate);
 enrollmentYearSelect.addEventListener('change', reCalculate);
 departmentSelect.addEventListener('change', reCalculate);
+courseSelect.addEventListener('change', reCalculate);
 
 function handleFile(file) {
     if (!file.name.toLowerCase().endsWith('.csv')) {
@@ -110,13 +114,20 @@ function processCSV(text) {
 
     // 状態初期化
     const studentInfo = {};
-    const groupStats = {};
+    const groupStats = {};    // 卒業要件の科目群
+    const teachingStats = {}; // 教職科目群
+    const museumStats = {};   // 博物館（学芸員）科目群
+
     let overallTotalGpt = 0.0;
     let overallCreditsEarned = 0.0;
     let overallCreditsAttempted = 0.0;
     const overallGradeCounts = { 'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0 };
 
-    const includeSpecial = includeSpecialCheck.checked;
+    let teachingTotalCredits = 0.0;
+    let museumTotalCredits = 0.0;
+
+    const takeTeaching = takeTeachingCheck.checked;
+    const takeMuseum = takeMuseumCheck.checked;
     const excludeFailed = excludeFailedCheck.checked;
 
     data.forEach(row => {
@@ -145,20 +156,27 @@ function processCSV(text) {
                 const gp = Default_grade[grade];
                 const gpt = credits * gp;
 
-                const isSpecial = (groupName === "博物館科目" || groupName === "教職科目");
-                const isFailed = (gp === 0.0);
+                const isTeaching = groupName.includes("教職");
+                const isMuseum = groupName.includes("博物館") || groupName.includes("学芸員");
 
-                let attemptedCreditsToAdd = credits;
-                if (excludeFailed && isFailed) {
-                    attemptedCreditsToAdd = 0.0;
+                let targetGroupStats = groupStats;
+
+                if (isTeaching) {
+                    if (!takeTeaching) return;
+                    targetGroupStats = teachingStats;
+                    if (gp > 0) teachingTotalCredits += credits;
+                } else if (isMuseum) {
+                    if (!takeMuseum) return;
+                    targetGroupStats = museumStats;
+                    if (gp > 0) museumTotalCredits += credits;
                 }
 
                 // 科目群の初期化
-                if (!groupStats[groupName]) {
-                    groupStats[groupName] = { totalGpt: 0, creditsEarned: 0, creditsAttempted: 0, gradeCounts: { 'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0 }, subjects: [] };
+                if (!targetGroupStats[groupName]) {
+                    targetGroupStats[groupName] = { totalGpt: 0, creditsEarned: 0, creditsAttempted: 0, gradeCounts: { 'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0 }, subjects: [] };
                 }
 
-                const group = groupStats[groupName];
+                const group = targetGroupStats[groupName];
                 group.totalGpt += gpt;
                 group.creditsAttempted += attemptedCreditsToAdd;
                 if (gp > 0) group.creditsEarned += credits;
@@ -173,8 +191,8 @@ function processCSV(text) {
                     gp: gp
                 });
 
-                // 全体の集計
-                if (includeSpecial || !isSpecial) {
+                // 卒業要件としての集計（教職・博物館以外）
+                if (!isTeaching && !isMuseum) {
                     overallTotalGpt += gpt;
                     overallCreditsAttempted += attemptedCreditsToAdd;
                     if (gp > 0) {
@@ -188,15 +206,15 @@ function processCSV(text) {
         }
     });
 
-    renderResults(studentInfo, overallTotalGpt, overallCreditsEarned, overallCreditsAttempted, overallGradeCounts, groupStats);
-    renderRequirements(overallCreditsEarned, groupStats);
+    renderResults(studentInfo, overallTotalGpt, overallCreditsEarned, overallCreditsAttempted, overallGradeCounts, groupStats, teachingStats, museumStats);
+    renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredits, museumTotalCredits);
 }
 
 function calcGpa(gpt, attempted) {
     return attempted > 0 ? (gpt / attempted) : 0.0;
 }
 
-function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, overallGradeCounts, groupStats) {
+function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, overallGradeCounts, groupStats, teachingStats, museumStats) {
     // 学生情報
     document.getElementById('studentDetails').innerHTML = `
         <div class="label">氏名</div><div class="val">${studentInfo.name || 'ー'}</div>
@@ -236,14 +254,15 @@ function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, o
     `;
     document.getElementById('overallStats').innerHTML += gradeCountsHtml;
 
-    // 科目群別
+    // 科目群別を統合して表示 (UI上は全ての群をカードで並べる)
+    const combinedStats = { ...groupStats, ...teachingStats, ...museumStats };
     const groupGrid = document.getElementById('groupGrid');
     groupGrid.innerHTML = ''; // クリア
 
-    const sortedGroups = Object.keys(groupStats).sort();
+    const sortedGroups = Object.keys(combinedStats).sort();
 
     sortedGroups.forEach(groupName => {
-        const stats = groupStats[groupName];
+        const stats = combinedStats[groupName];
         const gpa = calcGpa(stats.totalGpt, stats.creditsAttempted);
 
         let subjectsHtml = '<div class="subject-list">';
@@ -298,32 +317,46 @@ function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, o
 // ----------------------------------------
 // 進級・卒業要件の判定ロジック
 // ----------------------------------------
-function renderRequirements(overallCreditsEarned, groupStats) {
+function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredits, museumTotalCredits) {
     const year = enrollmentYearSelect.value;
     const department = departmentSelect.value;
+    const course = courseSelect.value;
+
     requirementsSection.innerHTML = '';
 
     // REQUIREMENTS_DATA.js から該当の設定を探す
     if (typeof REQUIREMENTS !== 'undefined' && REQUIREMENTS[year] && REQUIREMENTS[year][department]) {
-        const reqData = REQUIREMENTS[year][department];
-        let html = `<p style="margin-bottom: 20px;"><strong>[${year}年度入学 ${department}]</strong> の履修案内に基づく判定です。</p>`;
+        const reqDataBranch = REQUIREMENTS[year][department];
+        let courseText = course === "base" ? "" : ` / ${course}`;
+        let html = `<p style="margin-bottom: 20px;"><strong>[${year}年度入学 ${department}${courseText}]</strong> の履修案内に基づく判定です。</p>`;
 
-        // カテゴリ毎にブロックを生成（2->3, 3->4, 卒業）
-        const stages = [
-            { key: 'advancement_2_to_3', color: '#1976d2' },
-            { key: 'advancement_3_to_4', color: '#f57c00' },
-            { key: 'graduation', color: '#388e3c' }
-        ];
+        // 表示する判定ステージを収集する
+        let stagesToRender = [];
+
+        let graduationRules = reqDataBranch["base"]?.graduation;
+        // 指定コースがあり、固有の卒業要件が存在する場合は上書き
+        if (course !== "base" && reqDataBranch[course] && reqDataBranch[course].graduation) {
+            graduationRules = reqDataBranch[course].graduation;
+        }
+
+        if (graduationRules) {
+            stagesToRender.push({ ...graduationRules, color: '#388e3c' }); // Green for graduation
+        }
+
+        if (takeTeachingCheck.checked && reqDataBranch.teaching) {
+            stagesToRender.push({ ...reqDataBranch.teaching, color: '#f57c00' }); // Orange for teaching
+        }
+
+        if (takeMuseumCheck.checked && reqDataBranch.museum) {
+            stagesToRender.push({ ...reqDataBranch.museum, color: '#10B981' }); // Teal for museum
+        }
 
         html += `<div style="display: flex; flex-direction: column; gap: 20px;">`;
 
-        stages.forEach(stage => {
-            const ruleObj = reqData[stage.key];
-            if (!ruleObj) return;
-
+        stagesToRender.forEach(ruleObj => {
             html += `
-            <div style="border: 2px solid ${stage.color}; border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.02);">
-                <h3 style="color: ${stage.color}; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid ${stage.color}44; padding-bottom: 5px;">${ruleObj.title}</h3>
+            <div style="border: 2px solid ${ruleObj.color}; border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.02);">
+                <h3 style="color: ${ruleObj.color}; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid ${ruleObj.color}44; padding-bottom: 5px;">${ruleObj.title}</h3>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
             `;
 
@@ -338,10 +371,14 @@ function renderRequirements(overallCreditsEarned, groupStats) {
                 else if (cond.type === 'category') {
                     if (groupStats[cond.target]) {
                         currentVal = groupStats[cond.target].creditsEarned;
-                    } else if (cond.target === '自由選択') {
-                        // 自由選択は計算が複雑（上限超過分の合算など）なため簡易表示
-                        currentVal = 0; // 実装に応じてここは計算ロジックを分岐させます
-                        html += `<div style="font-size: 0.85em; color: #888;">※${cond.label}に必要な単位数の厳密な判定は履修案内をご確認ください。</div>`;
+                    }
+                }
+                // 特定要件の判定 (教職 / 博物館など、別で集計した特殊単位)
+                else if (cond.type === 'special_total') {
+                    if (cond.target === 'teaching') {
+                        currentVal = teachingTotalCredits;
+                    } else if (cond.target === 'museum') {
+                        currentVal = museumTotalCredits;
                     }
                 }
 
@@ -367,7 +404,7 @@ function renderRequirements(overallCreditsEarned, groupStats) {
                             <span>${currentVal.toFixed(1)} / ${cond.required.toFixed(1)} 単位 (${statusIcon} ${statusText})</span>
                         </div>
                         <div style="width: 100%; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden;">
-                            <div style="width: ${barPct}%; height: 100%; background: ${stage.color};"></div>
+                            <div style="width: ${barPct}%; height: 100%; background: ${ruleObj.color};"></div>
                         </div>
                     </div>
                 `;

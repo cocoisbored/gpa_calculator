@@ -1,65 +1,74 @@
-//REQUIREMENTS_DATA.js
-// ここに履修案内の設定値を年度・学科別に入力します。
-// 例として2023年度の「機械システム工学科」などのダミーデータを入れています。
-// ご自身の学科や入学年度に合わせて、必要な取得単位数を書き換えてください。
+// REQUIREMENTS_DATA.js
+// 履修案内の設定値（年度・学科・コース別）
+// 実際の履修案内に沿って各群の必要単位数を編集してください。
+
+// 'total' = 指定した実績値（卒業要件の合計など）
+// 'category' = 大区分の中の特定の小区分（科目群）の単位
+// 'specific' = 特定の必須科目などの判定（今回は単位数ベースの判定として実装）
 
 const REQUIREMENTS = {
-    "2023": {
+    "2024": {
         "機械システム工学科": {
-            // 例: 2年から3年への進級条件
-            advancement_2_to_3: {
-                title: "2年次 → 3年次 進級要件",
+            // 学科共通あるいは「コース未選択」時の要件ベース
+            "base": {
+                graduation: {
+                    title: "卒業要件 (機械システム工学科 共通)",
+                    conditions: [
+                        { type: 'total', required: 124, label: "卒業要件 総合計" },
+                        { type: 'category', target: "新入生科目群", required: 2, label: "新入生科目群" },
+                        { type: 'category', target: "グローバル教養科目群", required: 4, label: "グローバル教養科目群" },
+                        { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
+                        { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
+                        { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
+                        { type: 'category', target: "学科専門科目群", required: 64, label: "学科専門科目群 (基本)" },
+                    ]
+                }
+            },
+            // コースごとの専用要件（上で定義したベース要件に上書き/追加されます）
+            "航空宇宙・機械科学コース": {
+                graduation: {
+                    title: "卒業要件 (航空宇宙・機械科学コース)",
+                    conditions: [
+                        { type: 'total', required: 124, label: "卒業要件 総合計" },
+                        { type: 'category', target: "新入生科目群", required: 2, label: "新入生科目群" },
+                        { type: 'category', target: "グローバル教養科目群", required: 4, label: "グローバル教養科目群" },
+                        { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
+                        { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
+                        { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
+                        { type: 'category', target: "学科専門科目群", required: 70, label: "学科専門科目群 (航空宇宙コース指定)" },
+                    ]
+                }
+            },
+            "ロボティクス・知能機械デザインコース": {
+                graduation: {
+                    title: "卒業要件 (ロボティクスコース)",
+                    conditions: [
+                        { type: 'total', required: 124, label: "卒業要件 総合計" },
+                        { type: 'category', target: "新入生科目群", required: 2, label: "新入生科目群" },
+                        { type: 'category', target: "グローバル教養科目群", required: 4, label: "グローバル教養科目群" },
+                        { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
+                        { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
+                        { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
+                        { type: 'category', target: "学科専門科目群", required: 70, label: "学科専門科目群 (ロボティクスコース指定)" },
+                    ]
+                }
+            },
+            // 教職要件
+            teaching: {
+                title: "教職課程 要件",
                 conditions: [
-                    { type: 'total', required: 60, label: "修得総単位数" },
-                    { type: 'category', target: "教養科目", required: 16, label: "教養科目群" },
-                    { type: 'category', target: "専門基礎科目", required: 20, label: "専門基礎科目" }
+                    { type: 'special_total', target: 'teaching', required: 26, label: "教職科目 取得単位" }
+                    // 具体的な必修科目判定等も拡張可能
                 ]
             },
-            // 例: 3年から4年（研究室配属）への進級条件
-            advancement_3_to_4: {
-                title: "3年次 → 4年次 進級(研究室配属)要件",
+            // 博物館（学芸員）要件
+            museum: {
+                title: "学芸員資格 (博物館科目) 要件",
                 conditions: [
-                    { type: 'total', required: 96, label: "修得総単位数" },
-                    { type: 'category', target: "専門科目", required: 40, label: "専門科目" }
-                ]
-            },
-            // 例: 卒業要件
-            graduation: {
-                title: "卒業要件",
-                conditions: [
-                    { type: 'total', required: 124, label: "卒業要件 総合計" },
-                    { type: 'category', target: "教養科目", required: 26, label: "教養科目" },
-                    { type: 'category', target: "専門基礎科目", required: 30, label: "専門基礎科目" },
-                    { type: 'category', target: "専門科目", required: 50, label: "専門科目" },
-                    { type: 'category', target: "自由選択", required: 18, label: "自由選択枠" }
-                ]
-            }
-        },
-        "知能情報システム工学科": {
-            advancement_2_to_3: {
-                title: "2年次 → 3年次 進級要件",
-                conditions: [
-                    { type: 'total', required: 64, label: "修得総単位数" },
-                    { type: 'category', target: "教養科目", required: 14, label: "教養科目群" }
-                ]
-            },
-            advancement_3_to_4: {
-                title: "3年次 → 4年次 進級(研究室配属)要件",
-                conditions: [
-                    { type: 'total', required: 100, label: "修得総単位数" },
-                    { type: 'category', target: "専門科目", required: 42, label: "専門科目" }
-                ]
-            },
-            graduation: {
-                title: "卒業要件",
-                conditions: [
-                    { type: 'total', required: 124, label: "卒業要件 総合計" },
-                    { type: 'category', target: "教養科目", required: 22, label: "教養科目" },
-                    { type: 'category', target: "専門基礎科目", required: 34, label: "専門基礎科目" },
-                    { type: 'category', target: "専門科目", required: 52, label: "専門科目" }
+                    { type: 'special_total', target: 'museum', required: 19, label: "博物館科目 取得単位" }
                 ]
             }
         }
-        // 他の学科 (応用化学科, 生命工学科, 生体医用システム工学科) や 2022, 2025なども同様に追加可能です
     }
+    // "2023", "2025" なども同様に追加可能
 };
