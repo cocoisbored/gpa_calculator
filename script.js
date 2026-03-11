@@ -9,6 +9,7 @@ const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const takeTeachingCheck = document.getElementById('takeTeaching');
 const takeMuseumCheck = document.getElementById('takeMuseum');
+const includeSpecialCheck = document.getElementById('includeSpecial');
 const excludeFailedCheck = document.getElementById('excludeFailed');
 const enrollmentYearSelect = document.getElementById('enrollmentYear');
 const departmentSelect = document.getElementById('department');
@@ -49,6 +50,7 @@ function saveSettings() {
     localStorage.setItem('calc_course', courseSelect.value);
     localStorage.setItem('calc_teaching', takeTeachingCheck.checked);
     localStorage.setItem('calc_museum', takeMuseumCheck.checked);
+    localStorage.setItem('calc_include_special', includeSpecialCheck.checked);
     localStorage.setItem('calc_exclude', excludeFailedCheck.checked);
 }
 
@@ -63,6 +65,7 @@ function loadSettings() {
     if (localStorage.getItem('calc_course')) courseSelect.value = localStorage.getItem('calc_course');
     if (localStorage.getItem('calc_teaching') !== null) takeTeachingCheck.checked = localStorage.getItem('calc_teaching') === 'true';
     if (localStorage.getItem('calc_museum') !== null) takeMuseumCheck.checked = localStorage.getItem('calc_museum') === 'true';
+    if (localStorage.getItem('calc_include_special') !== null) includeSpecialCheck.checked = localStorage.getItem('calc_include_special') === 'true';
     if (localStorage.getItem('calc_exclude') !== null) excludeFailedCheck.checked = localStorage.getItem('calc_exclude') === 'true';
 }
 
@@ -122,6 +125,7 @@ departmentSelect.addEventListener('change', () => {
 
 takeTeachingCheck.addEventListener('change', handleChange);
 takeMuseumCheck.addEventListener('change', handleChange);
+includeSpecialCheck.addEventListener('change', handleChange);
 excludeFailedCheck.addEventListener('change', handleChange);
 courseSelect.addEventListener('change', handleChange);
 
@@ -203,6 +207,7 @@ function processCSV(text) {
 
     const takeTeaching = takeTeachingCheck.checked;
     const takeMuseum = takeMuseumCheck.checked;
+    const includeSpecial = includeSpecialCheck.checked;
     const excludeFailed = excludeFailedCheck.checked;
 
     data.forEach(row => {
@@ -283,8 +288,8 @@ function processCSV(text) {
                     gp: gp
                 });
 
-                // 卒業要件としての集計（教職・博物館以外）
-                if (!isTeaching && !isMuseum) {
+                // 卒業要件としての集計（教職・博物館以外、あるいは「含める」設定がONの場合）
+                if (includeSpecial || (!isTeaching && !isMuseum)) {
                     overallTotalGpt += gpt;
                     overallCreditsAttempted += attemptedCreditsToAdd;
                     if (gp > 0) {
