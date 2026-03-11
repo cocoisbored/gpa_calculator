@@ -14,12 +14,14 @@ def analyze_score_csv(csv_filepath, include_special_subjects=True, exclude_faile
         'total_gpt': 0.0,
         'credits_earned': 0.0,
         'credits_attempted': 0.0,
+        'grade_counts': {'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0},
         'subjects': []
     })
     
     overall_total_gpt = 0.0
     overall_credits_earned = 0.0
     overall_credits_attempted = 0.0
+    overall_grade_counts = {'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0}
     
     # データの読み込み
     with open(csv_filepath, mode='r', encoding='utf-8-sig') as f:
@@ -96,6 +98,8 @@ def analyze_score_csv(csv_filepath, include_special_subjects=True, exclude_faile
                     group['credits_attempted'] += attempted_credits_to_add
                     if gp > 0:
                         group['credits_earned'] += credits
+                    if grade in group['grade_counts']:
+                        group['grade_counts'][grade] += 1
                         
                     # 全体の集計
                     if include_special_subjects or not is_special:
@@ -103,6 +107,8 @@ def analyze_score_csv(csv_filepath, include_special_subjects=True, exclude_faile
                         overall_credits_attempted += attempted_credits_to_add
                         if gp > 0:
                             overall_credits_earned += credits
+                        if grade in overall_grade_counts:
+                            overall_grade_counts[grade] += 1
                             
                     group['subjects'].append({
                         'name': subject_name,
@@ -132,6 +138,7 @@ def analyze_score_csv(csv_filepath, include_special_subjects=True, exclude_faile
     print(f"GPA対象単位数:    {overall_credits_attempted}")
     print(f"GPT(総ポイント):   {overall_total_gpt:.2f}")
     print(f"総合 GPA:         {overall_gpa:.3f}")
+    print(f"評価内訳(科目数):  S:{overall_grade_counts['S']}  A:{overall_grade_counts['A']}  B:{overall_grade_counts['B']}  C:{overall_grade_counts['C']}  D:{overall_grade_counts['D']}")
     
     print("\n" + "=" * 50)
     print("📊 科目群別 成績")
@@ -144,6 +151,8 @@ def analyze_score_csv(csv_filepath, include_special_subjects=True, exclude_faile
         print(f"  取得単位数: {stats['credits_earned']} / GPA対象: {stats['credits_attempted']}")
         print(f"  GPT: {stats['total_gpt']:.2f}")
         print(f"  GPA: {gpa:.3f}")
+        gc = stats['grade_counts']
+        print(f"  評価内訳: S:{gc['S']} A:{gc['A']} B:{gc['B']} C:{gc['C']} D:{gc['D']}")
         print("-" * 30)
 
 def main():

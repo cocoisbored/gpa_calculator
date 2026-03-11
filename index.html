@@ -20,7 +20,32 @@
 
         <section class="glass-panel main-controls">
             <div class="settings">
-                <h2>⚙️ 計算の設定</h2>
+                <h2>⚙️ 計算・判定の設定</h2>
+
+                <div class="select-group" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label for="enrollmentYear"
+                            style="display:block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: #555;">入学年度</label>
+                        <select id="enrollmentYear"
+                            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                            <option value="2025">2025年度</option>
+                            <option value="2023">2023年度</option>
+                            <option value="2022">2022年度</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="department"
+                            style="display:block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: #555;">学科</label>
+                        <select id="department"
+                            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                            <option value="機械システム工学科">機械システム工学科</option>
+                            <option value="知能情報システム工学科">知能情報システム工学科</option>
+                            <option value="応用化学科">応用化学科</option>
+                            <option value="生命工学科">生命工学科</option>
+                            <option value="生体医用システム工学科">生体医用システム工学科</option>
+                        </select>
+                    </div>
+                </div>
 
                 <label class="toggle-container">
                     <input type="checkbox" id="includeSpecial" checked>
@@ -70,6 +95,12 @@
                 </div>
             </div>
 
+            <h2 class="section-title" style="margin-top: 40px;">🎯 進級・卒業要件チェック</h2>
+            <div id="requirementsSection" class="glass-panel"
+                style="margin-bottom: 30px; background: rgba(255, 255, 255, 0.9);">
+                <!-- JSで判定結果を挿入 -->
+            </div>
+
             <h2 class="section-title">📊 科目群別 成績</h2>
             <div class="group-grid" id="groupGrid">
                 <!-- JSで各科目群のカードを生成 -->
@@ -79,6 +110,7 @@
 
     </div>
 
+    <script src="REQUIREMENTS_DATA.js"></script>
     <script src="script.js"></script>
 </body>
 
