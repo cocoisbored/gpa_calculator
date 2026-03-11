@@ -244,12 +244,12 @@ function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, o
 
     // 評価内訳の追加（全体の総合の下）
     const gradeCountsHtml = `
-        <div class="grade-counts" style="margin-top: 15px; grid-column: 1 / -1; display: flex; justify-content: space-around; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
-            <div style="text-align:center;"><span style="font-size:0.8rem; color:#aaa;">S</span><br><strong style="font-size:1.1rem;">${overallGradeCounts['S']}</strong></div>
-            <div style="text-align:center;"><span style="font-size:0.8rem; color:#aaa;">A</span><br><strong style="font-size:1.1rem;">${overallGradeCounts['A']}</strong></div>
-            <div style="text-align:center;"><span style="font-size:0.8rem; color:#aaa;">B</span><br><strong style="font-size:1.1rem;">${overallGradeCounts['B']}</strong></div>
-            <div style="text-align:center;"><span style="font-size:0.8rem; color:#aaa;">C</span><br><strong style="font-size:1.1rem;">${overallGradeCounts['C']}</strong></div>
-            <div style="text-align:center;"><span style="font-size:0.8rem; color:#aaa;">D</span><br><strong style="font-size:1.1rem;">${overallGradeCounts['D']}</strong></div>
+        <div class="grade-counts" style="margin-top: 15px; grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.05); padding: 15px 20px; border-radius: 8px;">
+            <div style="text-align:center; flex: 1;"><span style="font-size:0.8rem; color:#aaa;">S</span><br><strong style="font-size:1.2rem;">${overallGradeCounts['S']}</strong></div>
+            <div style="text-align:center; flex: 1;"><span style="font-size:0.8rem; color:#aaa;">A</span><br><strong style="font-size:1.2rem;">${overallGradeCounts['A']}</strong></div>
+            <div style="text-align:center; flex: 1;"><span style="font-size:0.8rem; color:#aaa;">B</span><br><strong style="font-size:1.2rem;">${overallGradeCounts['B']}</strong></div>
+            <div style="text-align:center; flex: 1;"><span style="font-size:0.8rem; color:#aaa;">C</span><br><strong style="font-size:1.2rem;">${overallGradeCounts['C']}</strong></div>
+            <div style="text-align:center; flex: 1;"><span style="font-size:0.8rem; color:#aaa;">D</span><br><strong style="font-size:1.2rem;">${overallGradeCounts['D']}</strong></div>
         </div>
     `;
     document.getElementById('overallStats').innerHTML += gradeCountsHtml;
@@ -294,12 +294,12 @@ function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, o
                     <span class="val">${gpa.toFixed(3)}</span>
                 </div>
             </div>
-            <div class="group-grade-counts" style="margin: 15px 0 10px 0; display: flex; justify-content: space-around; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; font-size: 0.9em;">
-                <span style="display:flex; flex-direction:column; align-items:center;"><span style="font-size:0.7em; color:#aaa;">S</span><strong>${stats.gradeCounts['S']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center;"><span style="font-size:0.7em; color:#aaa;">A</span><strong>${stats.gradeCounts['A']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center;"><span style="font-size:0.7em; color:#aaa;">B</span><strong>${stats.gradeCounts['B']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center;"><span style="font-size:0.7em; color:#aaa;">C</span><strong>${stats.gradeCounts['C']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center;"><span style="font-size:0.7em; color:#aaa;">D</span><strong>${stats.gradeCounts['D']}</strong></span>
+            <div class="group-grade-counts" style="margin: 15px 0 10px 0; display: flex; justify-content: space-between; gap: 8px; background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 6px; font-size: 0.9em;">
+                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">S</span><strong>${stats.gradeCounts['S']}</strong></span>
+                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">A</span><strong>${stats.gradeCounts['A']}</strong></span>
+                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">B</span><strong>${stats.gradeCounts['B']}</strong></span>
+                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">C</span><strong>${stats.gradeCounts['C']}</strong></span>
+                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">D</span><strong>${stats.gradeCounts['D']}</strong></span>
             </div>
             <details class="subjects-details">
                 <summary>科目詳細を表示</summary>
