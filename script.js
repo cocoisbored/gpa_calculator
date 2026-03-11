@@ -42,13 +42,88 @@ fileInput.addEventListener('change', (e) => {
     }
 });
 
-// 再計算トリガー
-takeTeachingCheck.addEventListener('change', reCalculate);
-takeMuseumCheck.addEventListener('change', reCalculate);
-excludeFailedCheck.addEventListener('change', reCalculate);
-enrollmentYearSelect.addEventListener('change', reCalculate);
-departmentSelect.addEventListener('change', reCalculate);
-courseSelect.addEventListener('change', reCalculate);
+// 設定の保存
+function saveSettings() {
+    localStorage.setItem('calc_year', enrollmentYearSelect.value);
+    localStorage.setItem('calc_dept', departmentSelect.value);
+    localStorage.setItem('calc_course', courseSelect.value);
+    localStorage.setItem('calc_teaching', takeTeachingCheck.checked);
+    localStorage.setItem('calc_museum', takeMuseumCheck.checked);
+    localStorage.setItem('calc_exclude', excludeFailedCheck.checked);
+}
+
+// 設定の読み込み
+function loadSettings() {
+    if (localStorage.getItem('calc_year')) enrollmentYearSelect.value = localStorage.getItem('calc_year');
+    if (localStorage.getItem('calc_dept')) departmentSelect.value = localStorage.getItem('calc_dept');
+
+    // 年度と学科をロードした後にコース選択肢を生成する
+    updateCourseOptions();
+
+    if (localStorage.getItem('calc_course')) courseSelect.value = localStorage.getItem('calc_course');
+    if (localStorage.getItem('calc_teaching') !== null) takeTeachingCheck.checked = localStorage.getItem('calc_teaching') === 'true';
+    if (localStorage.getItem('calc_museum') !== null) takeMuseumCheck.checked = localStorage.getItem('calc_museum') === 'true';
+    if (localStorage.getItem('calc_exclude') !== null) excludeFailedCheck.checked = localStorage.getItem('calc_exclude') === 'true';
+}
+
+// コースの選択肢を REQUIREMENTS_DATA に基づいて動的に生成・更新する関数
+function updateCourseOptions() {
+    const year = enrollmentYearSelect.value;
+    const dept = departmentSelect.value;
+
+    // 現在選択されているコース（または保存されているコース）を記憶
+    const prevCourse = localStorage.getItem('calc_course') || courseSelect.value;
+
+    // 一度リセット
+    courseSelect.innerHTML = '<option value="base">未選択 / ベース要件</option>';
+
+    // REQUIREMENTS_DATA にデータが存在すればコースを追加
+    if (typeof REQUIREMENTS !== 'undefined' && REQUIREMENTS[year] && REQUIREMENTS[year][dept]) {
+        const deptData = REQUIREMENTS[year][dept];
+        const ignoreKeys = ['base', 'teaching', 'museum'];
+
+        for (const key in deptData) {
+            // base, teaching, museum 以外のキーが「コース名」として登録されていると判定
+            if (!ignoreKeys.includes(key)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = key;
+                courseSelect.appendChild(option);
+            }
+        }
+    }
+
+    // 前に選択していたコースが新しい選択肢の中にあれば復元、なければbaseに戻す
+    if (Array.from(courseSelect.options).some(opt => opt.value === prevCourse)) {
+        courseSelect.value = prevCourse;
+    } else {
+        courseSelect.value = "base";
+    }
+}
+
+// 初期化時に保存された設定を適用
+loadSettings();
+
+// 再計算および設定保存の共通トリガー
+const handleChange = () => {
+    saveSettings();
+    reCalculate();
+};
+
+enrollmentYearSelect.addEventListener('change', () => {
+    updateCourseOptions();
+    handleChange();
+});
+
+departmentSelect.addEventListener('change', () => {
+    updateCourseOptions();
+    handleChange();
+});
+
+takeTeachingCheck.addEventListener('change', handleChange);
+takeMuseumCheck.addEventListener('change', handleChange);
+excludeFailedCheck.addEventListener('change', handleChange);
+courseSelect.addEventListener('change', handleChange);
 
 function handleFile(file) {
     if (!file.name.toLowerCase().endsWith('.csv')) {
@@ -159,11 +234,28 @@ function processCSV(text) {
                 const isTeaching = groupName.includes("教職");
                 const isMuseum = groupName.includes("博物館") || groupName.includes("学芸員");
 
+                // CSVの科目群名表記揺れを吸収して、新しい大区分名に正規化（例: 新入生科目 -> 新入生科目群）
+                let normalizedGroupName = groupName;
+                if (!isTeaching && !isMuseum) {
+                    if (groupName.includes("新入生")) normalizedGroupName = "新入生科目群";
+                    else if (groupName.includes("グローバル教養")) normalizedGroupName = "グローバル教養科目群";
+                    else if (groupName.includes("グローバル言語") || groupName.includes("言語文化")) normalizedGroupName = "グローバル言語文化科目群";
+                    else if (groupName.includes("グローバル展開")) normalizedGroupName = "グローバル展開科目群";
+                    else if (groupName.includes("スポーツ") || groupName.includes("健康")) normalizedGroupName = "スポーツ健康科学科目群";
+                    else if (groupName.includes("学科専門") || groupName.includes("専門")) normalizedGroupName = "学科専門科目群";
+                    else normalizedGroupName = groupName + (groupName.endsWith("群") ? "" : "群"); // その他は「群」をつける
+                }
+
                 let targetGroupStats = groupStats;
+                let activeGroupName = normalizedGroupName;
+
+                const isFailed = (gp === 0.0);
+                const attemptedCreditsToAdd = (excludeFailed && isFailed) ? 0.0 : credits;
 
                 if (isTeaching) {
                     if (!takeTeaching) return;
                     targetGroupStats = teachingStats;
+                    activeGroupName = "教職科目群"; // 教職科目は常にこの名称で集計
                     if (gp > 0) teachingTotalCredits += credits;
                 } else if (isMuseum) {
                     if (!takeMuseum) return;
@@ -172,11 +264,11 @@ function processCSV(text) {
                 }
 
                 // 科目群の初期化
-                if (!targetGroupStats[groupName]) {
-                    targetGroupStats[groupName] = { totalGpt: 0, creditsEarned: 0, creditsAttempted: 0, gradeCounts: { 'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0 }, subjects: [] };
+                if (!targetGroupStats[activeGroupName]) {
+                    targetGroupStats[activeGroupName] = { totalGpt: 0, creditsEarned: 0, creditsAttempted: 0, gradeCounts: { 'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0 }, subjects: [] };
                 }
 
-                const group = targetGroupStats[groupName];
+                const group = targetGroupStats[activeGroupName];
                 group.totalGpt += gpt;
                 group.creditsAttempted += attemptedCreditsToAdd;
                 if (gp > 0) group.creditsEarned += credits;
@@ -254,60 +346,92 @@ function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, o
     `;
     document.getElementById('overallStats').innerHTML += gradeCountsHtml;
 
-    // 科目群別を統合して表示 (UI上は全ての群をカードで並べる)
-    const combinedStats = { ...groupStats, ...teachingStats, ...museumStats };
+    // 科目群別を大区分ごとに表示
     const groupGrid = document.getElementById('groupGrid');
     groupGrid.innerHTML = ''; // クリア
 
-    const sortedGroups = Object.keys(combinedStats).sort();
+    // カードを生成するヘルパー関数
+    const createCardsHtml = (statsObj) => {
+        let html = '<div class="group-grid" style="margin-bottom: 30px;">';
+        const sortedGroups = Object.keys(statsObj).sort();
 
-    sortedGroups.forEach(groupName => {
-        const stats = combinedStats[groupName];
-        const gpa = calcGpa(stats.totalGpt, stats.creditsAttempted);
+        if (sortedGroups.length === 0) {
+            return '<div style="color: #888; margin-bottom: 20px;">この区分の科目データはありません</div>';
+        }
 
-        let subjectsHtml = '<div class="subject-list">';
-        stats.subjects.forEach(sub => {
-            subjectsHtml += `
-                <div class="s-item">
-                    <span class="s-name">${sub.name}</span>
-                    <span class="s-meta">${sub.credits}単位 | <span class="s-grade">${sub.grade}</span></span>
+        sortedGroups.forEach(gName => {
+            const stats = statsObj[gName];
+            const gpa = calcGpa(stats.totalGpt, stats.creditsAttempted);
+
+            let subjectsHtml = '<div class="subject-list">';
+            stats.subjects.forEach(sub => {
+                subjectsHtml += `
+                    <div class="s-item">
+                        <span class="s-name">${sub.name}</span>
+                        <span class="s-meta">${sub.credits}単位 | <span class="s-grade">${sub.grade}</span></span>
+                    </div>
+                `;
+            });
+            subjectsHtml += '</div>';
+
+            html += `
+            <div class="group-card">
+                <h3>${gName}</h3>
+                <div class="group-stats">
+                    <div class="g-stat">
+                        <span class="label">取得</span>
+                        <span class="val">${stats.creditsEarned}</span>
+                    </div>
+                    <div class="g-stat">
+                        <span class="label">GPA対象</span>
+                        <span class="val">${stats.creditsAttempted}</span>
+                    </div>
+                    <div class="g-gpa">
+                        <span class="label">GPA</span>
+                        <span class="val">${gpa.toFixed(3)}</span>
+                    </div>
                 </div>
+                <div class="group-grade-counts" style="margin: 15px 0 10px 0; display: flex; justify-content: space-between; gap: 8px; background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 6px; font-size: 0.9em;">
+                    <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">S</span><strong>${stats.gradeCounts['S']}</strong></span>
+                    <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">A</span><strong>${stats.gradeCounts['A']}</strong></span>
+                    <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">B</span><strong>${stats.gradeCounts['B']}</strong></span>
+                    <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">C</span><strong>${stats.gradeCounts['C']}</strong></span>
+                    <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">D</span><strong>${stats.gradeCounts['D']}</strong></span>
+                </div>
+                <details class="subjects-details">
+                    <summary>科目詳細を表示</summary>
+                    ${subjectsHtml}
+                </details>
+            </div>
             `;
         });
-        subjectsHtml += '</div>';
+        html += '</div>';
+        return html;
+    };
 
-        const card = document.createElement('div');
-        card.className = 'group-card';
-        card.innerHTML = `
-            <h3>${groupName}</h3>
-            <div class="group-stats">
-                <div class="g-stat">
-                    <span class="label">取得</span>
-                    <span class="val">${stats.creditsEarned}</span>
-                </div>
-                <div class="g-stat">
-                    <span class="label">GPA対象</span>
-                    <span class="val">${stats.creditsAttempted}</span>
-                </div>
-                <div class="g-gpa">
-                    <span class="label">GPA</span>
-                    <span class="val">${gpa.toFixed(3)}</span>
-                </div>
-            </div>
-            <div class="group-grade-counts" style="margin: 15px 0 10px 0; display: flex; justify-content: space-between; gap: 8px; background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 6px; font-size: 0.9em;">
-                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">S</span><strong>${stats.gradeCounts['S']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">A</span><strong>${stats.gradeCounts['A']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">B</span><strong>${stats.gradeCounts['B']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">C</span><strong>${stats.gradeCounts['C']}</strong></span>
-                <span style="display:flex; flex-direction:column; align-items:center; flex: 1;"><span style="font-size:0.7em; color:#aaa;">D</span><strong>${stats.gradeCounts['D']}</strong></span>
-            </div>
-            <details class="subjects-details">
-                <summary>科目詳細を表示</summary>
-                ${subjectsHtml}
-            </details>
+    // 卒業要件科目の描画
+    let sectionsHtml = `
+        <h3 style="color: #388e3c; border-bottom: 2px solid #388e3c; padding-bottom: 5px; margin-bottom: 15px;">📚 卒業要件科目群</h3>
+        ${createCardsHtml(groupStats)}
+    `;
+
+    // 教職科目の描画
+    if (document.getElementById('takeTeaching').checked) {
+        sectionsHtml += `
+            <h3 style="color: #f57c00; border-bottom: 2px solid #f57c00; padding-bottom: 5px; margin-bottom: 15px;">👨‍🏫 教職科目</h3>
+            ${createCardsHtml(teachingStats)}
         `;
-        groupGrid.appendChild(card);
-    });
+    }
+
+    // 博物館科目の描画
+    if (document.getElementById('takeMuseum').checked) {
+        sectionsHtml += `
+            <h3 style="color: #10B981; border-bottom: 2px solid #10B981; padding-bottom: 5px; margin-bottom: 15px;">🏛️ 博物館（学芸員）科目</h3>
+            ${createCardsHtml(museumStats)}
+        `;
+    }
+
+    groupGrid.innerHTML = sectionsHtml;
 
     // スムーズに結果欄を表示
     resultsSection.classList.remove('hidden');
@@ -355,9 +479,9 @@ function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredi
 
         stagesToRender.forEach(ruleObj => {
             html += `
-            <div style="border: 2px solid ${ruleObj.color}; border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.02);">
-                <h3 style="color: ${ruleObj.color}; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid ${ruleObj.color}44; padding-bottom: 5px;">${ruleObj.title}</h3>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: ${ruleObj.color}; margin-top: 0; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px solid ${ruleObj.color}; padding-bottom: 4px;">${ruleObj.title}</h3>
+                <ul style="list-style-type: none; padding: 0; margin: 0;">
             `;
 
             ruleObj.conditions.forEach(cond => {
@@ -396,21 +520,16 @@ function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredi
                     statusText = `<span style="color: #f44336; font-weight: bold;">あと ${diff.toFixed(1)} 単位 不足</span>`;
                 }
 
-                // バーを描画
+                // リストとして描画
                 html += `
-                    <div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 4px;">
-                            <span>${cond.label}</span>
-                            <span>${currentVal.toFixed(1)} / ${cond.required.toFixed(1)} 単位 (${statusIcon} ${statusText})</span>
-                        </div>
-                        <div style="width: 100%; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden;">
-                            <div style="width: ${barPct}%; height: 100%; background: ${ruleObj.color};"></div>
-                        </div>
-                    </div>
+                    <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(128,128,128,0.3); padding: 8px 0; font-size: 0.95em;">
+                        <span>${cond.label}</span>
+                        <span>${currentVal.toFixed(1)} / ${cond.required.toFixed(1)} 単位 <span style="display: inline-block; width: 120px; text-align: right; margin-left: 10px;">(${statusIcon} ${statusText})</span></span>
+                    </li>
                 `;
             });
 
-            html += `</div></div>`;
+            html += `</ul></div>`;
         });
 
         html += `</div>`;
