@@ -102,6 +102,15 @@ function updateCourseOptions() {
     } else {
         courseSelect.value = "base";
     }
+
+    // コース選択肢が「ベース要件」のみの場合はセレクトボックスを無効化する
+    if (courseSelect.options.length <= 1) {
+        courseSelect.disabled = true;
+        courseSelect.style.opacity = '0.5';
+    } else {
+        courseSelect.disabled = false;
+        courseSelect.style.opacity = '1';
+    }
 }
 
 // 初期化時に保存された設定を適用
