@@ -20,7 +20,7 @@ const REQUIREMENTS = {
                         { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
                         { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
                         { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
-                        { type: 'category', target: "学科専門科目群", required: 64, label: "学科専門科目群 (基本)" },
+                        { type: 'category', target: "専門科目群", required: 64, label: "専門科目群 (基本)" },
                     ]
                 }
             },
@@ -35,7 +35,7 @@ const REQUIREMENTS = {
                         { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
                         { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
                         { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
-                        { type: 'category', target: "学科専門科目群", required: 70, label: "学科専門科目群 (航空宇宙コース指定)" },
+                        { type: 'category', target: "専門科目群", required: 70, label: "専門科目群 (航空宇宙コース指定)" },
                     ]
                 }
             },
@@ -49,7 +49,7 @@ const REQUIREMENTS = {
                         { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
                         { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
                         { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
-                        { type: 'category', target: "学科専門科目群", required: 70, label: "学科専門科目群 (ロボティクスコース指定)" },
+                        { type: 'category', target: "専門科目群", required: 70, label: "専門科目群 (ロボティクスコース指定)" },
                     ]
                 }
             },
@@ -75,21 +75,30 @@ const REQUIREMENTS = {
                     title: "卒業要件 (知能情報システム工学科 共通)",
                     conditions: [
                         { type: 'total', required: 124, label: "卒業要件 総合計" },
-                        { type: 'category', target: "新入生科目群", required: 2, label: "新入生科目群" },
-                        { type: 'category', target: "グローバル教養科目群", required: 4, label: "グローバル教養科目群" },
-                        { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
+                        { type: 'category', target: "新入生科目群", required: 3, label: "新入生科目群" },
+                        { type: 'category', target: "グローバル教養科目群", required: 8, label: "グローバル教養科目群" },
+                        { type: 'category', target: "グローバル言語文化科目群", required: 7, label: "グローバル言語文化科目群" },
                         { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
-                        { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
-                        { type: 'category', target: "学科専門科目群", required: 64, label: "学科専門科目群" },
+                        { type: 'category', target: "スポーツ健康科学科目群", required: 1, label: "スポーツ健康科学科目群" },
+                        { type: 'category', target: "専門基礎科目群", required: 42, label: "専門基礎科目 (最低)" },
+                        { type: 'category', target: "専門科目群", required: 45, label: "専門科目 (最低)" }
                     ]
                 }
             },
-            // 知能情報のコース
             "数理情報工学コース": {
                 graduation: {
                     title: "卒業要件 (数理情報工学コース)",
                     conditions: [
-                        { type: 'total', required: 124, label: "卒業要件 総合計" }
+                        { type: 'total', required: 124, label: "卒業要件 総合計" },
+                        { type: 'category', target: "新入生科目群", required: 3, label: "新入生科目群" },
+                        { type: 'category', target: "グローバル教養科目群", required: 8, label: "グローバル教養科目群" },
+                        { type: 'category', target: "グローバル言語文化科目群", required: 7, label: "グローバル言語文化科目群" },
+                        { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
+                        { type: 'category', target: "スポーツ健康科学科目群", required: 1, label: "スポーツ健康科学科目群" },
+                        { type: 'subject', target: ['線形代数学Ⅰ','線形代数学Ⅱ','微分積分学Ⅰ','微分積分学Ⅱ'], required: 10, label: "専門基礎 (工学共通数学 必修)" },
+                        { type: 'subject', target: ['微分方程式','数理統計学'], required: 4, label: "専門基礎 (数理・統計 必修等)" },
+                        { type: 'subject', target: ['知能情報システム工学概論','プログラミングⅠ','プログラミングⅡ','コンピュータ基礎','基礎電気回路','論理回路','情報理論','線形システム','情報化社会と職業'], required: 18, label: "専門基礎 (知能情報 必修)" },
+                        { type: 'subject', target: ['離散数学','アルゴリズム序論','計算機アーキテクチャ'], required: 6, label: "数理情報コース必修" },
                     ]
                 }
             },
@@ -97,7 +106,13 @@ const REQUIREMENTS = {
                 graduation: {
                     title: "卒業要件 (電子情報工学コース)",
                     conditions: [
-                        { type: 'total', required: 124, label: "卒業要件 総合計" }
+                        { type: 'total', required: 124, label: "卒業要件 総合計" },
+                        { type: 'category', target: "新入生科目群", required: 3, label: "新入生科目群" },
+                        { type: 'category', target: "グローバル教養科目群", required: 8, label: "グローバル教養科目群" },
+                        { type: 'category', target: "グローバル言語文化科目群", required: 7, label: "グローバル言語文化科目群" },
+                        { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
+                        { type: 'category', target: "スポーツ健康科学科目群", required: 1, label: "スポーツ健康科学科目群" },
+                        { type: 'subject', target: ['電磁気学Ⅰ','電磁気学Ⅱ','基礎電子回路','電子デバイスⅠ'], required: 8, label: "電子情報コース必修" },
                     ]
                 }
             },

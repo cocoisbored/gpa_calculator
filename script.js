@@ -256,7 +256,8 @@ function processCSV(text) {
                     else if (groupName.includes("グローバル言語") || groupName.includes("言語文化")) normalizedGroupName = "グローバル言語文化科目群";
                     else if (groupName.includes("グローバル展開")) normalizedGroupName = "グローバル展開科目群";
                     else if (groupName.includes("スポーツ") || groupName.includes("健康")) normalizedGroupName = "スポーツ健康科学科目群";
-                    else if (groupName.includes("学科専門") || groupName.includes("専門")) normalizedGroupName = "学科専門科目群";
+                    else if (groupName.includes("専門基礎")) normalizedGroupName = "専門基礎科目群";
+                    else if (groupName.includes("専門")) normalizedGroupName = "専門科目群";
                     else normalizedGroupName = groupName + (groupName.endsWith("群") ? "" : "群"); // その他は「群」をつける
                 }
 
@@ -518,6 +519,18 @@ function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredi
                     } else if (cond.target === 'museum') {
                         currentVal = museumTotalCredits;
                     }
+                }
+                // 特定の科目名リストを指定した判定（必修科目や特定の小区分など）
+                else if (cond.type === 'subject') {
+                    let targetList = Array.isArray(cond.target) ? cond.target : [cond.target];
+                    Object.values(groupStats).forEach(group => {
+                        group.subjects.forEach(sub => {
+                            if (sub.gp > 0 && targetList.some(t => sub.name === t || sub.name.startsWith(t) || sub.name.includes(t))) {
+                                // 既にカウント済みの科目を重複カウントしないようにする工夫が必要なら追加可能。
+                                currentVal += sub.credits;
+                            }
+                        });
+                    });
                 }
 
                 // 目標達成ステータスの計算
