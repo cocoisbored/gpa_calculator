@@ -34,7 +34,7 @@ const REQUIREMENTS = {
                         { type: 'category', target: "グローバル言語文化科目群", required: 6, label: "グローバル言語文化科目群" },
                         { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
                         { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
-                        { type: 'category', target: "専門科目群", required: 64, label: "専門科目群 (基本)" , validSubjects: 機械システム工学科_senmon },
+                        { type: 'category', target: "専門科目群", required: 64, label: "専門科目群 (基本)", validSubjects: 機械システム工学科_senmon },
                     ]
                 }
             },
@@ -94,8 +94,8 @@ const REQUIREMENTS = {
                         { type: 'category', target: "グローバル言語文化科目群", required: 7, label: "グローバル言語文化科目群" },
                         { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
                         { type: 'category', target: "スポーツ健康科学科目群", required: 1, label: "スポーツ健康科学科目群" },
-                        { type: 'category', target: "専門基礎科目群", required: 42, label: "専門基礎科目 (最低)" , validSubjects: 知能情報システム工学科_kiso },
-                        { type: 'category', target: "専門科目群", required: 45, label: "専門科目 (最低)" , validSubjects: 知能情報システム工学科_senmon }
+                        { type: 'category', target: "専門基礎科目群", required: 42, label: "専門基礎科目 (最低)", validSubjects: 知能情報システム工学科_kiso },
+                        { type: 'category', target: "専門科目群", required: 45, label: "専門科目 (最低)", validSubjects: 知能情報システム工学科_senmon }
                     ]
                 }
             },
@@ -112,10 +112,10 @@ const REQUIREMENTS = {
                         { type: 'category', target: "スポーツ健康科学科目群", required: 1, label: "スポーツ健康科学科目群" },
                         { type: 'category', target: "専門基礎科目群", required: 42, label: "専門基礎科目 (最低)" },
                         { type: 'category', target: "専門科目群", required: 45, label: "専門科目 (最低)" },
-                        { type: 'subject', target: ['線形代数学Ⅰ','線形代数学Ⅱ','微分積分学Ⅰ','微分積分学Ⅱ'], required: 10, label: "専門基礎 (工学共通数学 必修)" },
-                        { type: 'subject', target: ['微分方程式','数理統計学'], required: 4, label: "専門基礎 (数理・統計 必修等)" },
-                        { type: 'subject', target: ['知能情報システム工学概論','プログラミングⅠ','プログラミングⅡ','コンピュータ基礎','基礎電気回路','論理回路','情報理論','線形システム','情報化社会と職業'], required: 18, label: "専門基礎 (知能情報 必修)" },
-                        { type: 'subject', target: ['離散数学','アルゴリズム序論','計算機アーキテクチャ'], required: 6, label: "専門科目 (数理情報コース必修)" },
+                        { type: 'subject', target: ['線形代数学Ⅰ', '線形代数学Ⅱ', '微分積分学Ⅰ', '微分積分学Ⅱ'], required: 10, label: "専門基礎 (工学共通数学 必修)" },
+                        { type: 'subject', target: ['微分方程式', '数理統計学'], required: 4, label: "専門基礎 (数理・統計 必修等)" },
+                        { type: 'subject', target: ['知能情報システム工学概論', 'プログラミングⅠ', 'プログラミングⅡ', 'コンピュータ基礎', '基礎電気回路', '論理回路', '情報理論', '線形システム', '情報化社会と職業'], required: 18, label: "専門基礎 (知能情報 必修)" },
+                        { type: 'subject', target: ['離散数学', 'アルゴリズム序論', '計算機アーキテクチャ'], required: 6, label: "専門科目 (数理情報コース必修)" },
                     ]
                 }
             },
@@ -132,7 +132,7 @@ const REQUIREMENTS = {
                         { type: 'category', target: "スポーツ健康科学科目群", required: 1, label: "スポーツ健康科学科目群" },
                         { type: 'category', target: "専門基礎科目群", required: 42, label: "専門基礎科目 (最低)" },
                         { type: 'category', target: "専門科目群", required: 45, label: "専門科目 (最低)" },
-                        { type: 'subject', target: ['電磁気学Ⅰ','電磁気学Ⅱ','基礎電子回路','電子デバイスⅠ'], required: 8, label: "専門科目 (電子情報コース必修)" },
+                        { type: 'subject', target: ['電磁気学Ⅰ', '電磁気学Ⅱ', '基礎電子回路', '電子デバイスⅠ'], required: 8, label: "専門科目 (電子情報コース必修)" },
                     ]
                 }
             },
@@ -149,7 +149,7 @@ const REQUIREMENTS = {
                 ]
             }
         },
-                "生命工学科": {
+        "生命工学科": {
             "base": {
                 graduation: {
                     title: "卒業要件 (生命工学科 共通)",
@@ -288,3 +288,9 @@ const REQUIREMENTS = {
             }
         }
     }
+};
+
+// 2024年度の要件を他の年度にも適用（大幅なカリキュラム変更がない限り共通）
+REQUIREMENTS["2022"] = REQUIREMENTS["2024"];
+REQUIREMENTS["2023"] = REQUIREMENTS["2024"];
+REQUIREMENTS["2025"] = REQUIREMENTS["2024"];
