@@ -12,8 +12,6 @@ const takeMuseumCheck = document.getElementById('takeMuseum');
 const includeSpecialCheck = document.getElementById('includeSpecial');
 const excludeFailedCheck = document.getElementById('excludeFailed');
 const enrollmentYearSelect = document.getElementById('enrollmentYear');
-const departmentSelect = document.getElementById('department');
-const courseSelect = document.getElementById('courseSelect');
 const resultsSection = document.getElementById('resultsSection');
 const requirementsSection = document.getElementById('requirementsSection');
 
@@ -46,8 +44,6 @@ fileInput.addEventListener('change', (e) => {
 // 設定の保存
 function saveSettings() {
     localStorage.setItem('calc_year', enrollmentYearSelect.value);
-    localStorage.setItem('calc_dept', departmentSelect.value);
-    localStorage.setItem('calc_course', courseSelect.value);
     localStorage.setItem('calc_teaching', takeTeachingCheck.checked);
     localStorage.setItem('calc_museum', takeMuseumCheck.checked);
     localStorage.setItem('calc_include_special', includeSpecialCheck.checked);
@@ -57,60 +53,10 @@ function saveSettings() {
 // 設定の読み込み
 function loadSettings() {
     if (localStorage.getItem('calc_year')) enrollmentYearSelect.value = localStorage.getItem('calc_year');
-    if (localStorage.getItem('calc_dept')) departmentSelect.value = localStorage.getItem('calc_dept');
-
-    // 年度と学科をロードした後にコース選択肢を生成する
-    updateCourseOptions();
-
-    if (localStorage.getItem('calc_course')) courseSelect.value = localStorage.getItem('calc_course');
     if (localStorage.getItem('calc_teaching') !== null) takeTeachingCheck.checked = localStorage.getItem('calc_teaching') === 'true';
     if (localStorage.getItem('calc_museum') !== null) takeMuseumCheck.checked = localStorage.getItem('calc_museum') === 'true';
     if (localStorage.getItem('calc_include_special') !== null) includeSpecialCheck.checked = localStorage.getItem('calc_include_special') === 'true';
     if (localStorage.getItem('calc_exclude') !== null) excludeFailedCheck.checked = localStorage.getItem('calc_exclude') === 'true';
-}
-
-// コースの選択肢を REQUIREMENTS_DATA に基づいて動的に生成・更新する関数
-function updateCourseOptions() {
-    const year = enrollmentYearSelect.value;
-    const dept = departmentSelect.value;
-
-    // 現在選択されているコース（または保存されているコース）を記憶
-    const prevCourse = localStorage.getItem('calc_course') || courseSelect.value;
-
-    // 一度リセット
-    courseSelect.innerHTML = '<option value="base">未選択 / ベース要件</option>';
-
-    // REQUIREMENTS_DATA にデータが存在すればコースを追加
-    if (typeof REQUIREMENTS !== 'undefined' && REQUIREMENTS[year] && REQUIREMENTS[year][dept]) {
-        const deptData = REQUIREMENTS[year][dept];
-        const ignoreKeys = ['base', 'teaching', 'museum'];
-
-        for (const key in deptData) {
-            // base, teaching, museum 以外のキーが「コース名」として登録されていると判定
-            if (!ignoreKeys.includes(key)) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = key;
-                courseSelect.appendChild(option);
-            }
-        }
-    }
-
-    // 前に選択していたコースが新しい選択肢の中にあれば復元、なければbaseに戻す
-    if (Array.from(courseSelect.options).some(opt => opt.value === prevCourse)) {
-        courseSelect.value = prevCourse;
-    } else {
-        courseSelect.value = "base";
-    }
-
-    // コース選択肢が「ベース要件」のみの場合はセレクトボックスを無効化する
-    if (courseSelect.options.length <= 1) {
-        courseSelect.disabled = true;
-        courseSelect.style.opacity = '0.5';
-    } else {
-        courseSelect.disabled = false;
-        courseSelect.style.opacity = '1';
-    }
 }
 
 // 初期化時に保存された設定を適用
@@ -122,21 +68,12 @@ const handleChange = () => {
     reCalculate();
 };
 
-enrollmentYearSelect.addEventListener('change', () => {
-    updateCourseOptions();
-    handleChange();
-});
-
-departmentSelect.addEventListener('change', () => {
-    updateCourseOptions();
-    handleChange();
-});
+enrollmentYearSelect.addEventListener('change', handleChange);
 
 takeTeachingCheck.addEventListener('change', handleChange);
 takeMuseumCheck.addEventListener('change', handleChange);
 includeSpecialCheck.addEventListener('change', handleChange);
 excludeFailedCheck.addEventListener('change', handleChange);
-courseSelect.addEventListener('change', handleChange);
 
 function handleFile(file) {
     if (!file.name.toLowerCase().endsWith('.csv')) {
@@ -201,7 +138,7 @@ function processCSV(text) {
     const data = parseCSV(text);
 
     // 状態初期化
-    const studentInfo = {};
+    let studentInfo = { name: '不明', id: '不明', affiliation: '不明', grade: '不明', department: '不明', course: 'base' };
     const groupStats = {};    // 卒業要件の科目群
     const teachingStats = {}; // 教職科目群
     const museumStats = {};   // 博物館（学芸員）科目群
@@ -219,16 +156,44 @@ function processCSV(text) {
     const includeSpecial = includeSpecialCheck.checked;
     const excludeFailed = excludeFailedCheck.checked;
 
+    // パス1: メタデータ(学生情報)のみを先に抽出する
     data.forEach(row => {
         if (!row || row.length === 0) return;
-
-        // メタデータ抽出
         if (row.includes("[学生氏名]")) studentInfo.name = row[row.indexOf("[学生氏名]") + 1] || '不明';
         if (row.includes("[学籍番号 ]")) studentInfo.id = row[row.indexOf("[学籍番号 ]") + 1] || '不明';
         if (row.includes("[学籍番号]")) studentInfo.id = row[row.indexOf("[学籍番号]") + 1] || '不明';
         if (row.includes("[学生所属]")) studentInfo.affiliation = row[row.indexOf("[学生所属]") + 1] || '不明';
         if (row.includes("[学年]")) studentInfo.grade = row[row.indexOf("[学年]") + 1] || '不明';
         if (row.includes("[学年 ]")) studentInfo.grade = row[row.indexOf("[学年 ]") + 1] || '不明';
+    });
+
+    // 所属とコースを判定する
+    if (studentInfo.affiliation && studentInfo.affiliation !== "不明") {
+        const depts = ["機械システム工学科", "知能情報システム工学科", "応用化学科", "生命工学科", "生体医用システム工学科", "化学物理工学科"];
+        for (let d of depts) {
+            if (studentInfo.affiliation.includes(d)) {
+                studentInfo.department = d;
+                break;
+            }
+        }
+
+        if (studentInfo.department !== "不明" && typeof REQUIREMENTS !== 'undefined') {
+            const yearData = REQUIREMENTS[enrollmentYearSelect.value] || REQUIREMENTS["2024"];
+            if (yearData && yearData[studentInfo.department]) {
+                const courses = Object.keys(yearData[studentInfo.department]).filter(k => !['base', 'teaching', 'museum', 'graduation'].includes(k));
+                for (let c of courses) {
+                    if (studentInfo.affiliation.includes(c)) {
+                        studentInfo.course = c;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // パス2: 成績データを解析する
+    data.forEach(row => {
+        if (!row || row.length === 0) return;
 
         // 行の長さが十分にある場合に成績行として解析 (Pythonスクリプトに合わせて index 4, 6, 9, 1 を参照)
         if (row.length >= 10) {
@@ -248,17 +213,28 @@ function processCSV(text) {
                 const isTeaching = groupName.includes("教職");
                 const isMuseum = groupName.includes("博物館") || groupName.includes("学芸員");
 
-                // CSVの科目群名表記揺れを吸収して、新しい大区分名に正規化（例: 新入生科目 -> 新入生科目群）
+                // 他学科の科目かどうか判定
+                const allDepts = ["機械システム工学科", "知能情報システム工学科", "応用化学科", "生命工学科", "生体医用システム工学科", "化学物理工学科"];
+                let isOtherDept = false;
+                for (let d of allDepts) {
+                    if (d !== studentInfo.department && groupNameInput.includes(d)) {
+                        isOtherDept = true;
+                        break;
+                    }
+                }
+
+                // CSVの科目群名表記揺れを吸収して、新しい大区分名に正規化
                 let normalizedGroupName = groupName;
                 if (!isTeaching && !isMuseum) {
-                    if (groupName.includes("新入生")) normalizedGroupName = "新入生科目群";
+                    if (isOtherDept) normalizedGroupName = "自由選択科目群 (他学科等)";
+                    else if (groupName.includes("新入生")) normalizedGroupName = "新入生科目群";
                     else if (groupName.includes("グローバル教養")) normalizedGroupName = "グローバル教養科目群";
                     else if (groupName.includes("グローバル言語") || groupName.includes("言語文化")) normalizedGroupName = "グローバル言語文化科目群";
                     else if (groupName.includes("グローバル展開")) normalizedGroupName = "グローバル展開科目群";
                     else if (groupName.includes("スポーツ") || groupName.includes("健康")) normalizedGroupName = "スポーツ健康科学科目群";
                     else if (groupName.includes("専門基礎")) normalizedGroupName = "専門基礎科目群";
                     else if (groupName.includes("専門")) normalizedGroupName = "専門科目群";
-                    else normalizedGroupName = groupName + (groupName.endsWith("群") ? "" : "群"); // その他は「群」をつける
+                    else normalizedGroupName = groupName + (groupName.endsWith("群") ? "" : "群");
                 }
 
                 let targetGroupStats = groupStats;
@@ -314,7 +290,7 @@ function processCSV(text) {
     });
 
     renderResults(studentInfo, overallTotalGpt, overallCreditsEarned, overallCreditsAttempted, overallGradeCounts, groupStats, teachingStats, museumStats);
-    renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredits, museumTotalCredits);
+    renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredits, museumTotalCredits, studentInfo);
 }
 
 function calcGpa(gpt, attempted) {
@@ -456,10 +432,10 @@ function renderResults(studentInfo, totalGpt, creditsEarned, creditsAttempted, o
 // ----------------------------------------
 // 進級・卒業要件の判定ロジック
 // ----------------------------------------
-function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredits, museumTotalCredits) {
+function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredits, museumTotalCredits, studentInfo) {
     const year = enrollmentYearSelect.value;
-    const department = departmentSelect.value;
-    const course = courseSelect.value;
+    const department = studentInfo.department;
+    const course = studentInfo.course;
 
     requirementsSection.innerHTML = '';
 
@@ -490,6 +466,28 @@ function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredi
             stagesToRender.push({ ...reqDataBranch.museum, color: '#10B981' }); // Teal for museum
         }
 
+        // 自由単位計算のための第一パス (graduation要件のみ)
+        let totalUsedForRequirements = 0;
+        if (graduationRules && graduationRules.conditions) {
+            graduationRules.conditions.forEach(c => {
+                if (c.type === 'category') {
+                    let cVal = 0;
+                    if (groupStats[c.target]) {
+                        if (c.validSubjects) {
+                            groupStats[c.target].subjects.forEach(sub => {
+                                if (sub.gp > 0 && c.validSubjects.some(t => sub.name.includes(t))) {
+                                    cVal += sub.credits;
+                                }
+                            });
+                        } else {
+                            cVal = groupStats[c.target].creditsEarned;
+                        }
+                    }
+                    totalUsedForRequirements += Math.min(c.required, cVal);
+                }
+            });
+        }
+
         html += `<div style="display: flex; flex-direction: column; gap: 20px;">`;
 
         stagesToRender.forEach(ruleObj => {
@@ -506,10 +504,22 @@ function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredi
                 if (cond.type === 'total') {
                     currentVal = overallCreditsEarned;
                 }
+                // 自由選択単位
+                else if (cond.type === 'free_elective') {
+                    currentVal = Math.max(0, overallCreditsEarned - totalUsedForRequirements);
+                }
                 // 「特定カテゴリ（科目群）」の判定
                 else if (cond.type === 'category') {
                     if (groupStats[cond.target]) {
-                        currentVal = groupStats[cond.target].creditsEarned;
+                        if (cond.validSubjects) {
+                            groupStats[cond.target].subjects.forEach(sub => {
+                                if (sub.gp > 0 && cond.validSubjects.some(t => sub.name.includes(t))) {
+                                    currentVal += sub.credits;
+                                }
+                            });
+                        } else {
+                            currentVal = groupStats[cond.target].creditsEarned;
+                        }
                     }
                 }
                 // 特定要件の判定 (教職 / 博物館など、別で集計した特殊単位)
@@ -526,7 +536,6 @@ function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredi
                     Object.values(groupStats).forEach(group => {
                         group.subjects.forEach(sub => {
                             if (sub.gp > 0 && targetList.some(t => sub.name === t || sub.name.startsWith(t) || sub.name.includes(t))) {
-                                // 既にカウント済みの科目を重複カウントしないようにする工夫が必要なら追加可能。
                                 currentVal += sub.credits;
                             }
                         });
@@ -537,7 +546,6 @@ function renderRequirements(overallCreditsEarned, groupStats, teachingTotalCredi
                 let diff = cond.required - currentVal;
                 let statusIcon = "";
                 let statusText = "";
-                let barPct = Math.min(100, Math.max(0, (currentVal / cond.required) * 100));
 
                 if (diff <= 0) {
                     statusIcon = "✅";
