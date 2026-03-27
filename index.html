@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPA Calculator - Advanced Analytics</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=8">
 </head>
 
 <body>
@@ -79,6 +79,28 @@
         <!-- 結果表示領域（ファイル読み込み後に表示） -->
         <section id="resultsSection" class="results-section hidden">
 
+            <div id="departmentSelectPanel" class="glass-panel" style="margin-bottom: 30px; display: none;">
+                <h2>🎯 学科・コース選択</h2>
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label for="departmentSelect"
+                            style="display:block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: #555;">学科を選択</label>
+                        <select id="departmentSelect"
+                            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                            <option value="">学科を選択してください</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="courseSelect"
+                            style="display:block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: #555;">コース（該当する場合）</label>
+                        <select id="courseSelect"
+                            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; display: none;">
+                            <option value="base">指定なし</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="info-gpa-container">
                 <div class="glass-panel student-info">
                     <h2>🎓 学生情報</h2>
@@ -111,13 +133,21 @@
 
         <!-- バージョン情報 -->
         <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.85em; color: #888;">
-            ver 2.0
+            ver 2.1
         </div>
 
     </div>
 
-    <script src="REQUIREMENTS_DATA.js?v=7"></script>
-    <script src="script.js?v=7"></script>
+    <script src="REQUIREMENTS_DATA.js?v=9"></script>
+    <script src="script.js?v=9"></script>
+    <script>
+        // ページ読み込み完了時に、toggleGroup関数が存在しているか確認
+        window.addEventListener('load', () => {
+            console.log('Page loaded. checking toggleGroup function...');
+            console.log('toggleGroup exists:', typeof toggleGroup === 'function');
+            console.log('renderGroupedRequirements exists:', typeof renderGroupedRequirements === 'function');
+        });
+    </script>
 </body>
 
 </html>

@@ -4,7 +4,9 @@
 
 // 'total' = 指定した実績値（卒業要件の合計など）
 // 'category' = 大区分の中の特定の小区分（科目群）の単位
-// 'specific' = 特定の必須科目などの判定（今回は単位数ベースの判定として実装）
+// 'groupedCategories' = 大区分（教養科目など）内の複数の科目群をまとめた要件
+// 'mandatory' = 必修科目（すべて取得必須）
+// 'selective_required' = 選択必修（複数科目から要件分の選択が必須）
 
 const REQUIREMENTS = {
     "2024": {
@@ -13,6 +15,7 @@ const REQUIREMENTS = {
             "base": {
                 graduation: {
                     title: "卒業要件 (機械システム工学科 共通)",
+                    // 前のフォーマットとの互換性を保つため conditions も保持
                     conditions: [
                         { type: 'total', required: 124, label: "卒業要件 総合計" },
                         { type: 'category', target: "新入生科目群", required: 2, label: "新入生科目群" },
@@ -21,7 +24,82 @@ const REQUIREMENTS = {
                         { type: 'category', target: "グローバル展開科目群", required: 2, label: "グローバル展開科目群" },
                         { type: 'category', target: "スポーツ健康科学科目群", required: 2, label: "スポーツ健康科学科目群" },
                         { type: 'category', target: "専門科目群", required: 64, label: "専門科目群 (基本)" },
-                    ]
+                    ],
+                    // 新しいグループ化された要件フォーマット（トグル展開用）
+                    groupedRequirements: {
+                        "教養科目": {
+                            totalRequired: 25,
+                            icon: "📚",
+                            subGroups: [
+                                {
+                                    name: "新入生科目群",
+                                    required: 2,
+                                    conditions: [
+                                        { type: 'category', target: "新入生科目群" }
+                                    ]
+                                },
+                                {
+                                    name: "グローバル教養科目群",
+                                    required: 4,
+                                    conditions: [
+                                        { type: 'category', target: "グローバル教養科目群" }
+                                    ]
+                                },
+                                {
+                                    name: "グローバル言語文化科目群",
+                                    required: 6,
+                                    conditions: [
+                                        { type: 'category', target: "グローバル言語文化科目群" }
+                                    ]
+                                },
+                                {
+                                    name: "グローバル展開科目群",
+                                    required: 2,
+                                    conditions: [
+                                        { type: 'category', target: "グローバル展開科目群" }
+                                    ]
+                                },
+                                {
+                                    name: "スポーツ健康科学科目群",
+                                    required: 2,
+                                    conditions: [
+                                        { type: 'category', target: "スポーツ健康科学科目群" }
+                                    ]
+                                }
+                            ]
+                        },
+                        "学科専門": {
+                            totalRequired: 64,
+                            icon: "🔧",
+                            subGroups: [
+                                {
+                                    name: "専門基礎科目群",
+                                    required: 20,
+                                    mandatory: ["微分積分学Ⅰ", "微分積分学Ⅱ", "線形代数学Ⅰ", "線形代数学Ⅱ"],
+                                    mandatoryLabel: "必修科目（4科目全て）",
+                                    conditions: [
+                                        { type: 'category', target: "専門基礎科目群" }
+                                    ]
+                                },
+                                {
+                                    name: "専門科目群",
+                                    required: 44,
+                                    selectiveRequired: [
+                                        { label: "以下から4単位以上", subjects: ["機械力学Ⅰ", "機械力学Ⅱ", "制御工学"] },
+                                        { label: "以下から4単位以上", subjects: ["熱力学Ⅰ", "熱力学Ⅱ", "伝熱工学"] }
+                                    ],
+                                    conditions: [
+                                        { type: 'category', target: "専門科目群" }
+                                    ]
+                                }
+                            ]
+                        },
+                        "自由単位": {
+                            totalRequired: 35,
+                            icon: "✨",
+                            description: "その他の履修科目（他学科科目、自由選択科目など）"
+                        }
+                    }
                 }
             },
             // コースごとの専用要件（上で定義したベース要件に上書き/追加されます）
