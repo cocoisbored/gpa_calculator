@@ -266,8 +266,9 @@ function processCSV(text) {
                 group.totalGpt += gpt;
                 group.creditsAttempted += attemptedCreditsToAdd;
                 if (gp > 0) group.creditsEarned += credits;
-                if (group.gradeCounts.hasOwnProperty(grade)) {
-                    group.gradeCounts[grade]++;
+                let mappedGrade = grade === '秀' ? 'S' : grade === '優' ? 'A' : grade === '良' ? 'B' : grade === '可' ? 'C' : (grade === '不可' || grade === 'F') ? 'D' : grade;
+                if (group.gradeCounts.hasOwnProperty(mappedGrade)) {
+                    group.gradeCounts[mappedGrade]++;
                 }
 
                 group.subjects.push({
@@ -284,8 +285,8 @@ function processCSV(text) {
                     if (gp > 0) {
                         overallCreditsEarned += credits;
                     }
-                    if (overallGradeCounts.hasOwnProperty(grade)) {
-                        overallGradeCounts[grade]++;
+                    if (overallGradeCounts.hasOwnProperty(mappedGrade)) {
+                        overallGradeCounts[mappedGrade]++;
                     }
                 }
             }
